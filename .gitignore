@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.venv/
+.vscode/
+config/  # throwaway local HA dev instance config, if run here

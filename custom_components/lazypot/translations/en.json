@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect your LazyPot account",
+        "description": "Paste the integration token from your LazyPot account settings (website or app) \u2014 this is not your LazyPot login password.",
+        "data": {
+          "api_token": "Integration token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Token was rejected. Generate a new one from your LazyPot account settings.",
+      "cannot_connect": "Could not reach the LazyPot smart-home API.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This LazyPot account is already configured."
+    }
+  }
+}
