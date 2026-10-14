@@ -5,20 +5,31 @@ pots into Home Assistant as native devices/entities (soil moisture, battery,
 water level, last-watered) so you can build your own dashboards and
 automations instead of relying on the LazyPot app.
 
-Status: scaffold — not yet functional against a live LazyPot account. See
+Status: code-complete. The config flow and entities (soil moisture,
+battery, water level, last-watered) are fully implemented against the
+documented API contract below. **Not yet validated end-to-end against a
+live LazyPot account** — the backend's token-generation endpoint
+(`/api/v1/tokens`) that lets you mint the long-lived token this
+integration needs is still being built on the LazyPot side. Once token
+generation ships on the LazyPot website, you'll be able to generate a
+token from your account there and use it here; until then this
+integration cannot be exercised against production. See
 [`custom_components/lazypot/`](custom_components/lazypot/) for the
-in-progress implementation.
+implementation.
 
-## Installation (once published)
+## HACS installation
 
-1. HACS → Integrations → search "LazyPot" (or add this repo as a custom
-   repository while unpublished: HACS → Integrations → ⋮ → Custom
-   repositories → paste this repo URL, category "Integration").
-2. Home Assistant → Settings → Devices & Services → Add Integration →
+This repo is not yet in the HACS default store. Until it is:
+
+1. HACS → Integrations → ⋮ → Custom repositories → paste this repo's
+   URL (`https://github.com/mikevollebregt/lazypot-homeassistant`),
+   category "Integration" → Add.
+2. HACS → Integrations → search "LazyPot" → Download.
+3. Restart Home Assistant.
+4. Home Assistant → Settings → Devices & Services → Add Integration →
    "LazyPot".
-3. Paste the integration token generated from your LazyPot account
-   (website/app → account settings → "Generate Home Assistant token" —
-   not your LazyPot login password).
+5. Paste the token from your LazyPot account settings (once token
+   generation is available there — not your LazyPot login password).
 
 ## What this is NOT
 
