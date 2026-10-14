@@ -59,6 +59,12 @@ SENSOR_TYPES: tuple[LazyPotSensorDescription, ...] = (
         name="Last watered",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
+    LazyPotSensorDescription(
+        key="last_seen",
+        value_key="lastSeenOn",
+        name="Last seen",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 

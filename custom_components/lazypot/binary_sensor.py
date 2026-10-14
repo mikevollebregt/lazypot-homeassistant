@@ -22,6 +22,7 @@ async def async_setup_entry(
     coordinator: LazyPotCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[BinarySensorEntity] = []
     for connection_id in coordinator.data:
+        entities.append(LazyPotOnlineBinarySensor(coordinator, connection_id))
         entities.append(
             LazyPotThresholdBinarySensor(
                 coordinator,
@@ -45,6 +46,28 @@ async def async_setup_entry(
             )
         )
     async_add_entities(entities)
+
+
+class LazyPotOnlineBinarySensor(CoordinatorEntity[LazyPotCoordinator], BinarySensorEntity):
+    """Reflects the API's own isOnline flag (reported within the last 24h)."""
+
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+
+    def __init__(self, coordinator: LazyPotCoordinator, connection_id: str) -> None:
+        super().__init__(coordinator)
+        self._connection_id = connection_id
+        self._attr_name = "Online"
+        self._attr_unique_id = f"{connection_id}_online"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, connection_id)},
+            manufacturer=MANUFACTURER,
+            name=coordinator.data.get(connection_id, {}).get("name") or f"LazyPot {connection_id}",
+        )
+
+    @property
+    def is_on(self) -> bool | None:
+        device = self.coordinator.data.get(self._connection_id, {})
+        return bool(device.get("isOnline"))
 
 
 class LazyPotThresholdBinarySensor(CoordinatorEntity[LazyPotCoordinator], BinarySensorEntity):
