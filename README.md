@@ -5,15 +5,19 @@ pots into Home Assistant as native devices/entities (soil moisture, battery,
 water level, last-watered) so you can build your own dashboards and
 automations instead of relying on the LazyPot app.
 
-Status: code-complete. The config flow and entities (soil moisture,
-battery, water level, last-watered) are fully implemented against the
-documented API contract below. **Not yet validated end-to-end against a
-live LazyPot account** — the backend's token-generation endpoint
-(`/api/v1/tokens`) that lets you mint the long-lived token this
-integration needs is still being built on the LazyPot side. Once token
-generation ships on the LazyPot website, you'll be able to generate a
-token from your account there and use it here; until then this
-integration cannot be exercised against production. See
+Status: **validated end-to-end against a live LazyPot account (2026-10-15)**.
+The config flow, entities, and derived binary sensors were exercised in a
+real Home Assistant instance against production `smarthome.lazypot.nl` using
+a real integration token generated from the LazyPot website
+(`/account/integrations`): all 15 devices on the account imported correctly
+as HA devices (8 entities each), and every sensor/binary_sensor value
+(battery, moisture, water level, last-seen, last-watered, online, low-battery,
+low-water) matched the live API response exactly. Along the way this test
+caught and fixed a real production bug in the backend (`lazypot-smarthome`
+commit `ba073f9`): `GET /devices` was 500ing because it queried a
+`UserId` column on `LazyPotConnections` that doesn't exist — ownership is
+resolved through the `LazyPotConnectionUsers` join table instead, same as
+kataskopos' own `GetLazyPotsByUser`. See
 [`custom_components/lazypot/`](custom_components/lazypot/) for the
 implementation.
 
