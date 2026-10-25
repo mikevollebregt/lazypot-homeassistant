@@ -15,17 +15,12 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import LazyPotApiClient, LazyPotApiError, LazyPotAuthError
+from .api import LazyPotApiClient, LazyPotApiError, LazyPotAuthError, is_account_id
 from .const import CONF_API_TOKEN, CONF_BASE_URL, DEFAULT_API_BASE_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
-
-
-def is_legacy_unique_id(unique_id: str | None, api_token: str) -> bool:
-    """Return True for entries created before 1.0.2, keyed on the token's first 12 chars."""
-    return unique_id == api_token[:12]
 
 
 class LazyPotConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -98,11 +93,15 @@ class LazyPotConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(account_id)
                 data_updates = {CONF_API_TOKEN: user_input[CONF_API_TOKEN]}
-                if is_legacy_unique_id(
-                    reauth_entry.unique_id, reauth_entry.data[CONF_API_TOKEN]
-                ):
-                    # Entry from before account ids existed: there is nothing
-                    # to compare against yet, so adopt the account id now.
+                if not is_account_id(reauth_entry.unique_id):
+                    # Entry from before 1.0.2 (unique_id was a token prefix):
+                    # there is nothing to compare against yet, so adopt the
+                    # account id now, unless another entry already has it.
+                    other = self.hass.config_entries.async_entry_for_domain_unique_id(
+                        DOMAIN, account_id
+                    )
+                    if other is not None and other.entry_id != reauth_entry.entry_id:
+                        return self.async_abort(reason="already_configured")
                     return self.async_update_reload_and_abort(
                         reauth_entry, unique_id=account_id, data_updates=data_updates
                     )

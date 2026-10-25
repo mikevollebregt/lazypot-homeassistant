@@ -9,8 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import LazyPotApiClient, LazyPotApiError
-from .config_flow import is_legacy_unique_id
+from .api import LazyPotApiClient, LazyPotApiError, is_account_id
 from .const import CONF_API_TOKEN, CONF_BASE_URL, DEFAULT_API_BASE_URL, DOMAIN
 from .coordinator import LazyPotCoordinator
 
@@ -44,7 +43,7 @@ async def _async_migrate_unique_id(
     Best effort: if the account endpoint is unavailable, keep the old id and
     retry on the next setup instead of failing the whole integration.
     """
-    if not is_legacy_unique_id(entry.unique_id, entry.data[CONF_API_TOKEN]):
+    if is_account_id(entry.unique_id):
         return
     try:
         account_id = await client.async_get_account_id()

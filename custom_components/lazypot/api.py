@@ -12,6 +12,7 @@ wrapped response too, in case a future API version ever wraps results.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 import aiohttp
@@ -19,6 +20,17 @@ import aiohttp
 from .const import DEFAULT_API_BASE_URL
 
 _LOGGER = logging.getLogger(__name__)
+
+REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=30)
+
+# GET /account returns 32 lowercase hex characters. Entries created before
+# 1.0.2 used the first 12 characters of the token as unique_id instead.
+_ACCOUNT_ID_RE = re.compile(r"[0-9a-f]{32}")
+
+
+def is_account_id(value: str | None) -> bool:
+    """Return True if value has the shape of a LazyPot account id."""
+    return value is not None and _ACCOUNT_ID_RE.fullmatch(value) is not None
 
 
 class LazyPotApiError(Exception):
@@ -30,7 +42,7 @@ class LazyPotAuthError(LazyPotApiError):
 
 
 class LazyPotApiClient:
-    """Minimal client: validate token, fetch devices + latest measurements."""
+    """Minimal client: account id, devices + latest measurements, history."""
 
     def __init__(
         self,
@@ -45,11 +57,6 @@ class LazyPotApiClient:
     def _headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self._token}"}
 
-    async def async_validate_token(self) -> None:
-        """Raise LazyPotAuthError if the token is not accepted. Used by the
-        config flow to validate input before creating the config entry."""
-        await self.async_get_devices()
-
     async def async_get_account_id(self) -> str:
         """Return the stable, opaque id of the account this token belongs to.
 
@@ -58,7 +65,7 @@ class LazyPotApiClient:
         """
         body = await self._get_json(f"{self._base_url}/account")
         account_id = body.get("accountId") if isinstance(body, dict) else None
-        if not isinstance(account_id, str) or not account_id:
+        if not isinstance(account_id, str) or not is_account_id(account_id):
             raise LazyPotApiError(f"Unexpected account response shape: {body!r}")
         return account_id
 
@@ -123,11 +130,15 @@ class LazyPotApiClient:
     ) -> Any:
         try:
             async with self._session.get(
-                url, headers=self._headers(), params=params
+                url, headers=self._headers(), params=params, timeout=REQUEST_TIMEOUT
             ) as resp:
                 if resp.status == 401:
                     raise LazyPotAuthError("Token rejected (401)")
                 resp.raise_for_status()
                 return await resp.json()
+        except TimeoutError as err:
+            raise LazyPotApiError("Timed out contacting LazyPot API") from err
         except aiohttp.ClientError as err:
             raise LazyPotApiError(f"Network error contacting LazyPot API: {err}") from err
+        except ValueError as err:
+            raise LazyPotApiError(f"Invalid JSON from LazyPot API: {err}") from err
