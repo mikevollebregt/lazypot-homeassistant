@@ -50,6 +50,18 @@ class LazyPotApiClient:
         config flow to validate input before creating the config entry."""
         await self.async_get_devices()
 
+    async def async_get_account_id(self) -> str:
+        """Return the stable, opaque id of the account this token belongs to.
+
+        The id stays the same across token rotation, so it is used as the
+        config entry's unique_id.
+        """
+        body = await self._get_json(f"{self._base_url}/account")
+        account_id = body.get("accountId") if isinstance(body, dict) else None
+        if not isinstance(account_id, str) or not account_id:
+            raise LazyPotApiError(f"Unexpected account response shape: {body!r}")
+        return account_id
+
     async def async_get_devices(self) -> list[dict[str, Any]]:
         """Fetch the account's LazyPot devices with their latest measurement.
 

@@ -23,28 +23,34 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
 
+def is_legacy_unique_id(unique_id: str | None, api_token: str) -> bool:
+    """Return True for entries created before 1.0.2, keyed on the token's first 12 chars."""
+    return unique_id == api_token[:12]
+
+
 class LazyPotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LazyPot."""
 
     VERSION = 1
 
-    async def _async_validate_token(self, api_token: str, base_url: str) -> str | None:
-        """Validate a token against the API. Return an error key, or None if valid."""
+    async def _async_get_account_id(
+        self, api_token: str, base_url: str
+    ) -> tuple[str | None, str | None]:
+        """Validate a token. Return (account_id, None) or (None, error key)."""
         client = LazyPotApiClient(
             async_get_clientsession(self.hass),
             api_token=api_token,
             base_url=base_url,
         )
         try:
-            await client.async_validate_token()
+            return await client.async_get_account_id(), None
         except LazyPotAuthError:
-            return "invalid_auth"
+            return None, "invalid_auth"
         except LazyPotApiError:
-            return "cannot_connect"
+            return None, "cannot_connect"
         except Exception:  # noqa: BLE001 - last-resort guard, log + show generic error
             _LOGGER.exception("Unexpected error validating LazyPot token")
-            return "unknown"
-        return None
+            return None, "unknown"
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -52,16 +58,16 @@ class LazyPotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            error = await self._async_validate_token(
+            account_id, error = await self._async_get_account_id(
                 user_input[CONF_API_TOKEN],
                 user_input.get(CONF_BASE_URL, DEFAULT_API_BASE_URL),
             )
             if error:
                 errors["base"] = error
             else:
-                # One config entry per LazyPot account (token), not per device
-                # -- the devices endpoint already returns the whole fleet.
-                await self.async_set_unique_id(user_input[CONF_API_TOKEN][:12])
+                # One config entry per LazyPot account, not per device or
+                # token -- the devices endpoint already returns the whole fleet.
+                await self.async_set_unique_id(account_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="LazyPot", data=user_input)
 
@@ -83,16 +89,28 @@ class LazyPotConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            error = await self._async_validate_token(
+            account_id, error = await self._async_get_account_id(
                 user_input[CONF_API_TOKEN],
                 reauth_entry.data.get(CONF_BASE_URL, DEFAULT_API_BASE_URL),
             )
             if error:
                 errors["base"] = error
             else:
+                await self.async_set_unique_id(account_id)
+                data_updates = {CONF_API_TOKEN: user_input[CONF_API_TOKEN]}
+                if is_legacy_unique_id(
+                    reauth_entry.unique_id, reauth_entry.data[CONF_API_TOKEN]
+                ):
+                    # Entry from before account ids existed: there is nothing
+                    # to compare against yet, so adopt the account id now.
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, unique_id=account_id, data_updates=data_updates
+                    )
+                # A token from a different LazyPot account must not silently
+                # replace this entry's devices with someone else's.
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
                 return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={CONF_API_TOKEN: user_input[CONF_API_TOKEN]},
+                    reauth_entry, data_updates=data_updates
                 )
 
         return self.async_show_form(

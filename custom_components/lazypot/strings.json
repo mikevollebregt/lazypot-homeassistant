@@ -23,7 +23,8 @@
     },
     "abort": {
       "already_configured": "This LazyPot account is already configured.",
-      "reauth_successful": "Your LazyPot account was reconnected."
+      "reauth_successful": "Your LazyPot account was reconnected.",
+      "wrong_account": "This token belongs to a different LazyPot account. Use a token from the account this integration was set up with."
     }
   }
 }
