@@ -8,13 +8,11 @@ website/app account settings, not entered here from scratch.
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from typing import Any
 
-import aiohttp
 import voluptuous as vol
-from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import LazyPotApiClient, LazyPotApiError, LazyPotAuthError
@@ -25,33 +23,44 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
 
 
-class LazyPotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LazyPotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LazyPot."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def _async_validate_token(self, api_token: str, base_url: str) -> str | None:
+        """Validate a token against the API. Return an error key, or None if valid."""
+        client = LazyPotApiClient(
+            async_get_clientsession(self.hass),
+            api_token=api_token,
+            base_url=base_url,
+        )
+        try:
+            await client.async_validate_token()
+        except LazyPotAuthError:
+            return "invalid_auth"
+        except LazyPotApiError:
+            return "cannot_connect"
+        except Exception:  # noqa: BLE001 - last-resort guard, log + show generic error
+            _LOGGER.exception("Unexpected error validating LazyPot token")
+            return "unknown"
+        return None
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            session = async_get_clientsession(self.hass)
-            client = LazyPotApiClient(
-                session,
-                api_token=user_input[CONF_API_TOKEN],
-                base_url=user_input.get(CONF_BASE_URL, DEFAULT_API_BASE_URL),
+            error = await self._async_validate_token(
+                user_input[CONF_API_TOKEN],
+                user_input.get(CONF_BASE_URL, DEFAULT_API_BASE_URL),
             )
-            try:
-                await client.async_validate_token()
-            except LazyPotAuthError:
-                errors["base"] = "invalid_auth"
-            except LazyPotApiError:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001 - last-resort guard, log + show generic error
-                _LOGGER.exception("Unexpected error validating LazyPot token")
-                errors["base"] = "unknown"
+            if error:
+                errors["base"] = error
             else:
                 # One config entry per LazyPot account (token), not per device
-                # -- GetLazyPotsByUser already returns the whole fleet.
+                # -- the devices endpoint already returns the whole fleet.
                 await self.async_set_unique_id(user_input[CONF_API_TOKEN][:12])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="LazyPot", data=user_input)
@@ -60,17 +69,34 @@ class LazyPotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
         )
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
-        return LazyPotOptionsFlow(config_entry)
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Start reauth when the coordinator raises ConfigEntryAuthFailed."""
+        return await self.async_step_reauth_confirm()
 
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new token, validate it and update the existing entry."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
 
-class LazyPotOptionsFlow(config_entries.OptionsFlow):
-    """Placeholder for future options (e.g. poll interval override)."""
+        if user_input is not None:
+            error = await self._async_validate_token(
+                user_input[CONF_API_TOKEN],
+                reauth_entry.data.get(CONF_BASE_URL, DEFAULT_API_BASE_URL),
+            )
+            if error:
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_TOKEN: user_input[CONF_API_TOKEN]},
+                )
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        return self.async_create_entry(title="", data={})
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_USER_SCHEMA,
+            errors=errors,
+        )

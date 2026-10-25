@@ -7,6 +7,13 @@
         "data": {
           "api_token": "Integration token"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reconnect your LazyPot account",
+        "description": "Your LazyPot integration token was rejected. It may have expired or been revoked. Generate a new token in your LazyPot account settings (website or app) and paste it here.",
+        "data": {
+          "api_token": "Integration token"
+        }
       }
     },
     "error": {
@@ -15,7 +22,8 @@
       "unknown": "Unexpected error."
     },
     "abort": {
-      "already_configured": "This LazyPot account is already configured."
+      "already_configured": "This LazyPot account is already configured.",
+      "reauth_successful": "Your LazyPot account was reconnected."
     }
   }
 }
