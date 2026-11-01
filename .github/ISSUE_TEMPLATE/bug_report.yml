@@ -1,0 +1,71 @@
+name: Bug report
+description: Something in the LazyPot integration does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Never paste your LazyPot token in this form.
+        For questions, use [Discussions](https://github.com/mikevollebregt/lazypot-homeassistant/discussions) instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: false
+  - type: input
+    id: integration-version
+    attributes:
+      label: Integration version
+      description: Shown in HACS, or in custom_components/lazypot/manifest.json
+      placeholder: "1.0.2"
+    validations:
+      required: true
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      description: Settings, About
+      placeholder: "2026.10.3"
+    validations:
+      required: true
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Installation method
+      options:
+        - HACS
+        - Manual
+    validations:
+      required: true
+  - type: input
+    id: pot-count
+    attributes:
+      label: Number of pots on your account
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug logs
+      description: |
+        Enable debug logging, reproduce the problem and paste the relevant lines.
+        ```yaml
+        logger:
+          logs:
+            custom_components.lazypot: debug
+        ```
+        Check the lines for anything private before posting.
+      render: text
+    validations:
+      required: false

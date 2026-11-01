@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Roadmap and voting
+    url: https://lazypot.nl/roadmap
+    about: See what is planned, vote on features and suggest new ones.
+  - name: Questions and help
+    url: https://github.com/mikevollebregt/lazypot-homeassistant/discussions/categories/q-a
+    about: Ask setup and usage questions in Discussions.
+  - name: Show your dashboard or automation
+    url: https://github.com/mikevollebregt/lazypot-homeassistant/discussions/categories/show-and-tell
+    about: Share what you built with LazyPot in Home Assistant.
+  - name: Security issue
+    url: https://github.com/mikevollebregt/lazypot-homeassistant/security/advisories/new
+    about: Report security problems privately, never in a public issue.
+  - name: LazyPot product, order or pot hardware
+    url: https://lazypot.nl
+    about: For questions about your pot itself or an order, contact LazyPot via the website.
