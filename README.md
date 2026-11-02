@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/mikevollebregt/lazypot-homeassistant/releases"><img alt="Release" src="https://img.shields.io/github/v/release/mikevollebregt/lazypot-homeassistant"></a>
-  <a href="https://hacs.xyz/docs/faq/custom_repositories/"><img alt="HACS Custom" src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg"></a>
+  <a href="https://hacs.xyz"><img alt="HACS Default" src="https://img.shields.io/badge/HACS-Default-41BDF5.svg"></a>
   <a href="https://github.com/mikevollebregt/lazypot-homeassistant/actions/workflows/hassfest.yml"><img alt="hassfest" src="https://github.com/mikevollebregt/lazypot-homeassistant/actions/workflows/hassfest.yml/badge.svg"></a>
   <a href="https://github.com/mikevollebregt/lazypot-homeassistant/actions/workflows/hacs.yml"><img alt="HACS validation" src="https://github.com/mikevollebregt/lazypot-homeassistant/actions/workflows/hacs.yml/badge.svg"></a>
   <img alt="Home Assistant 2024.11+" src="https://img.shields.io/badge/Home%20Assistant-2024.11%2B-18BCF2">
@@ -34,10 +34,9 @@ plants on your dashboards and use them in automations like any other device.
 
 | | |
 | --- | --- |
-| Latest release | [v1.0.2](https://github.com/mikevollebregt/lazypot-homeassistant/releases/latest) |
+| Latest release | [v1.0.3](https://github.com/mikevollebregt/lazypot-homeassistant/releases/latest) |
 | Verified | End to end in a real Home Assistant instance against a real LazyPot account and real pots |
-| Install via HACS | Yes, as a custom repository (see below) |
-| HACS default store | Submitted, waiting for final review ([hacs/default#11984](https://github.com/hacs/default/pull/11984), [roadmap item](https://lazypot.nl/roadmap/hacs-default-store-listing)) |
+| Install via HACS | Yes, listed in the HACS default store since 2026-11-02 ([hacs/default#11984](https://github.com/hacs/default/pull/11984)) |
 | Control from Home Assistant | Not yet, read-only today ([planned](https://lazypot.nl/roadmap/home-assistant-watering-controls)) |
 | Local control | Not yet, cloud polling today ([researching](https://lazypot.nl/roadmap/local-control)) |
 
@@ -67,10 +66,12 @@ Each pot becomes one Home Assistant device with these entities:
 
 Or manually in HACS:
 
-1. In HACS, open the three-dot menu and choose **Custom repositories**.
-2. Add `https://github.com/mikevollebregt/lazypot-homeassistant` with type **Integration**.
-3. Search for **LazyPot** in HACS and click **Download**.
-4. Restart Home Assistant.
+1. Open HACS in Home Assistant and search for **LazyPot**.
+2. Open it and click **Download**.
+3. Restart Home Assistant.
+
+You no longer need to add it as a custom repository. If you did that before
+the store listing, it keeps working and you can leave it as is.
 
 ### Manual
 
@@ -144,7 +145,7 @@ The roadmap is public and you can vote and comment on every item on
 | --- | --- |
 | [Home Assistant integration](https://lazypot.nl/roadmap/home-assistant-integration) | Shipped |
 | [More developer API endpoints](https://lazypot.nl/roadmap/more-developer-api-endpoints) | Shipped |
-| [Official HACS store listing](https://lazypot.nl/roadmap/hacs-default-store-listing) | In progress |
+| [Official HACS store listing](https://lazypot.nl/roadmap/hacs-default-store-listing) | Shipped |
 | [Dashboard card and automation blueprints](https://lazypot.nl/roadmap/home-assistant-dashboard-card-and-blueprints) | Planned |
 | [Control watering from Home Assistant](https://lazypot.nl/roadmap/home-assistant-watering-controls) | Planned |
 | [Local control (no cloud needed)](https://lazypot.nl/roadmap/local-control) | Planned, researching |

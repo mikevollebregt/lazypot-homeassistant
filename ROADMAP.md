@@ -5,7 +5,7 @@ The source of truth for the LazyPot roadmap is
 on and commented on, and you can suggest new items. Votes and comments directly
 influence what gets built next. This file summarises the Home Assistant side.
 
-Last updated: 2026-11-01.
+Last updated: 2026-11-02.
 
 ## Shipped
 
@@ -18,18 +18,15 @@ Last updated: 2026-11-01.
   A revoked token can be replaced from the Home Assistant UI, the entry is
   tied to your LazyPot account instead of the token, and duplicate accounts
   are blocked. Requested during the HACS review.
+- **Official HACS store listing** (2026-11-02).
+  Merged into the HACS default store via
+  [hacs/default#11984](https://github.com/hacs/default/pull/11984). Search for
+  LazyPot in HACS, no custom repository needed.
+  [Roadmap item](https://lazypot.nl/roadmap/hacs-default-store-listing)
 - **Developer API** for your own integrations: device list, device detail,
   reading history and online status.
   [API docs](https://smarthome.lazypot.nl/swagger/index.html),
   [roadmap item](https://lazypot.nl/roadmap/more-developer-api-endpoints)
-
-## In progress
-
-- **Official HACS store listing.** Submitted as
-  [hacs/default#11984](https://github.com/hacs/default/pull/11984), all
-  automated checks pass, waiting for the final maintainer review. Until then,
-  install it as a HACS custom repository.
-  [Roadmap item](https://lazypot.nl/roadmap/hacs-default-store-listing)
 
 ## Planned
 

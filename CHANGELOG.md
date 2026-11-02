@@ -6,8 +6,13 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-11-02
+
 ### Changed
 
+- LazyPot is now in the HACS default store. The README installation steps
+  start with searching for LazyPot in HACS instead of adding a custom
+  repository.
 - New README with installation buttons, entity overview, example automation,
   privacy notes and the public roadmap.
 - Added a roadmap, contributing guide, security policy and issue templates.
@@ -53,7 +58,8 @@ a real LazyPot account.
 - Binary sensors: online, low battery, low water.
 - hassfest and HACS validation on every push.
 
-[Unreleased]: https://github.com/mikevollebregt/lazypot-homeassistant/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/mikevollebregt/lazypot-homeassistant/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/mikevollebregt/lazypot-homeassistant/releases/tag/v1.0.3
 [1.0.2]: https://github.com/mikevollebregt/lazypot-homeassistant/releases/tag/v1.0.2
 [1.0.1]: https://github.com/mikevollebregt/lazypot-homeassistant/releases/tag/v1.0.1
 [1.0.0]: https://github.com/mikevollebregt/lazypot-homeassistant/releases/tag/v1.0.0
