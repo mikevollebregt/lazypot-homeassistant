@@ -1,3 +1,5 @@
+<center>
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/mikevollebregt/lazypot-homeassistant/master/custom_components/lazypot/brand/logo@2x.png" alt="LazyPot" width="220">
 </p>
@@ -17,6 +19,8 @@
   <img alt="Home Assistant 2024.11+" src="https://img.shields.io/badge/Home%20Assistant-2024.11%2B-18BCF2">
   <a href="https://github.com/mikevollebregt/lazypot-homeassistant/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/mikevollebregt/lazypot-homeassistant"></a>
 </p>
+
+</center>
 
 ---
 
