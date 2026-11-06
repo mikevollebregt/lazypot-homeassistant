@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="custom_components/lazypot/brand/logo@2x.png" alt="LazyPot" width="220">
+  <img src="https://raw.githubusercontent.com/mikevollebregt/lazypot-homeassistant/master/custom_components/lazypot/brand/logo@2x.png" alt="LazyPot" width="220">
 </p>
 
 <h1 align="center">LazyPot for Home Assistant</h1>
@@ -15,7 +15,7 @@
   <a href="https://github.com/mikevollebregt/lazypot-homeassistant/actions/workflows/hassfest.yml"><img alt="hassfest" src="https://github.com/mikevollebregt/lazypot-homeassistant/actions/workflows/hassfest.yml/badge.svg"></a>
   <a href="https://github.com/mikevollebregt/lazypot-homeassistant/actions/workflows/hacs.yml"><img alt="HACS validation" src="https://github.com/mikevollebregt/lazypot-homeassistant/actions/workflows/hacs.yml/badge.svg"></a>
   <img alt="Home Assistant 2024.11+" src="https://img.shields.io/badge/Home%20Assistant-2024.11%2B-18BCF2">
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/mikevollebregt/lazypot-homeassistant"></a>
+  <a href="https://github.com/mikevollebregt/lazypot-homeassistant/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/mikevollebregt/lazypot-homeassistant"></a>
 </p>
 
 ---
@@ -32,16 +32,14 @@ plants on your dashboards and use them in automations like any other device.
 
 ## Status
 
-| | |
-| --- | --- |
-| Latest release | [v1.0.3](https://github.com/mikevollebregt/lazypot-homeassistant/releases/latest) |
-| Verified | End to end in a real Home Assistant instance against a real LazyPot account and real pots |
-| Install via HACS | Yes, listed in the HACS default store since 2026-11-02 ([hacs/default#11984](https://github.com/hacs/default/pull/11984)) |
-| Control from Home Assistant | Not yet, read-only today ([planned](https://lazypot.nl/roadmap/home-assistant-watering-controls)) |
-| Local control | Not yet, cloud polling today ([researching](https://lazypot.nl/roadmap/local-control)) |
+- **Latest release:** [v1.0.3](https://github.com/mikevollebregt/lazypot-homeassistant/releases/latest)
+- **Verified:** End to end in a real Home Assistant instance against a real LazyPot account and real pots
+- **Install via HACS:** Yes, listed in the HACS default store since 2026-11-02 ([hacs/default#11984](https://github.com/hacs/default/pull/11984))
+- **Control from Home Assistant:** Not yet, read-only today ([planned](https://lazypot.nl/roadmap/home-assistant-watering-controls))
+- **Local control:** Not yet, cloud polling today ([researching](https://lazypot.nl/roadmap/local-control))
 
-See the [changelog](CHANGELOG.md) for what changed in each release and the
-[roadmap](ROADMAP.md) for what comes next.
+See the [changelog](https://github.com/mikevollebregt/lazypot-homeassistant/blob/master/CHANGELOG.md) for what changed in each release and the
+[roadmap](https://github.com/mikevollebregt/lazypot-homeassistant/blob/master/ROADMAP.md) for what comes next.
 
 ## What you get
 
@@ -151,7 +149,7 @@ The roadmap is public and you can vote and comment on every item on
 | [Local control (no cloud needed)](https://lazypot.nl/roadmap/local-control) | Planned, researching |
 | [Real-time WebSocket API](https://lazypot.nl/roadmap/real-time-websocket-api) | Planned |
 
-More detail in [ROADMAP.md](ROADMAP.md).
+More detail in [ROADMAP.md](https://github.com/mikevollebregt/lazypot-homeassistant/blob/master/ROADMAP.md).
 
 ## Support and feedback
 
@@ -183,16 +181,16 @@ issue. More about me and how LazyPot was made:
 
 ## Development
 
-Contributions are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are welcome, see [CONTRIBUTING.md](https://github.com/mikevollebregt/lazypot-homeassistant/blob/master/CONTRIBUTING.md).
 
 ```bash
 # Link the integration into a local or throwaway Home Assistant config directory
 ln -s "$(pwd)/custom_components/lazypot" <ha_config_dir>/custom_components/lazypot
 ```
 
-Every push runs [hassfest](.github/workflows/hassfest.yml) and the
-[HACS action](.github/workflows/hacs.yml).
+Every push runs [hassfest](https://github.com/mikevollebregt/lazypot-homeassistant/blob/master/.github/workflows/hassfest.yml) and the
+[HACS action](https://github.com/mikevollebregt/lazypot-homeassistant/blob/master/.github/workflows/hacs.yml).
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/mikevollebregt/lazypot-homeassistant/blob/master/LICENSE)
