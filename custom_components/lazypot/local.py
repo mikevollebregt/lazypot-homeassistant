@@ -24,6 +24,7 @@ from aiohttp import web
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
@@ -32,6 +33,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     DOMAIN,
     LOCAL_WEBHOOK_ID,
+    SIGNAL_LOCAL_CLAIMED,
     SIGNAL_LOCAL_NEW_POT,
     SIGNAL_LOCAL_UPDATE,
 )
@@ -102,6 +104,9 @@ class LocalHub:
         async_dispatcher_send(
             self.hass, SIGNAL_LOCAL_UPDATE.format(self.entry.entry_id, device_id)
         )
+        for coordinator in self._cloud_coordinators():
+            if coordinator.connection_for(device_id):
+                coordinator.async_update_listeners()
 
     @callback
     def async_register_webhook(self) -> None:
@@ -131,6 +136,33 @@ class LocalHub:
             async_track_time_interval(self.hass, _refresh, timedelta(minutes=30))
         )
 
+    def _cloud_coordinators(self) -> list[Any]:
+        return [
+            obj
+            for obj in self.hass.data.get(DOMAIN, {}).values()
+            if hasattr(obj, "async_local_report")
+        ]
+
+    def _claiming_entry(self, device_id: str) -> str | None:
+        for coordinator in self._cloud_coordinators():
+            if coordinator.async_local_report(device_id):
+                return coordinator.entry.entry_id
+        return None
+
+    def is_claimed(self, device_id: str) -> bool:
+        return bool(self.pots.get(device_id, {}).get("cloud_entry"))
+
+    @callback
+    def _async_remove_local_device(self, device_id: str) -> None:
+        """The pot showed up in a cloud entry: drop the separate local device."""
+        registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(registry, self.entry.entry_id):
+            if (DOMAIN, device_id) in device.identifiers:
+                _LOGGER.info(
+                    "LazyPot %s is also in your account; using that device", device_id
+                )
+                registry.async_remove_device(device.id)
+
     @callback
     def async_unregister_webhook(self) -> None:
         webhook.async_unregister(self.hass, LOCAL_WEBHOOK_ID)
@@ -159,11 +191,21 @@ class LocalHub:
         report["channels"] = channels if isinstance(channels, dict) else {}
         report["last_seen"] = dt_util.utcnow().isoformat()
 
-        is_new = device_id not in self.pots
+        previous = self.pots.get(device_id)
         self.pots[device_id] = report
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY_SECONDS)
 
-        if is_new:
+        # Does a cloud entry (LazyPot account) know this pot? Then it stays that entry's
+        # device and takes the readings; this entry adds nothing for it.
+        claimed_by = self._claiming_entry(device_id)
+        report["cloud_entry"] = claimed_by
+        self._store.async_delay_save(self._data_to_save, SAVE_DELAY_SECONDS)
+        was_claimed = bool(previous and previous.get("cloud_entry"))
+
+        if claimed_by:
+            if previous is not None and not was_claimed:
+                self._async_remove_local_device(device_id)
+            async_dispatcher_send(hass, SIGNAL_LOCAL_CLAIMED, device_id)
+        elif previous is None or was_claimed:
             _LOGGER.info("New local LazyPot %s (%s)", report["name"], device_id)
             async_dispatcher_send(
                 hass, SIGNAL_LOCAL_NEW_POT.format(self.entry.entry_id), device_id

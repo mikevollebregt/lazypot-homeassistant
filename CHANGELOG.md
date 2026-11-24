@@ -20,8 +20,9 @@ project uses [Semantic Versioning](https://semver.org/).
 - Channel switches for local pots: LazyPot app, LazyPot integration and MQTT. A change is
   applied at the pot's next check-in (attribute `pending` until then); the pot refuses to
   switch off its last channel.
-- A pot set up both in the cloud and locally shows as one device (needs the smart-home API
-  that returns `deviceId`).
+- A pot with both the app and the integration switched on stays one device: its account
+  device takes the local reports whenever they are newer than the cloud data, and gets the
+  channel switches. Needs the smart-home API that returns `deviceId`.
 
 ## [1.0.3] - 2026-11-02
 

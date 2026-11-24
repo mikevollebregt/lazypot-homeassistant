@@ -164,7 +164,12 @@ async def async_setup_entry(
             async_add_entities(_entities_for(device_id))
 
         async_add_entities(
-            [e for device_id in hub.pots for e in _entities_for(device_id)]
+            [
+                e
+                for device_id in hub.pots
+                if not hub.is_claimed(device_id)
+                for e in _entities_for(device_id)
+            ]
         )
         entry.async_on_unload(
             async_dispatcher_connect(

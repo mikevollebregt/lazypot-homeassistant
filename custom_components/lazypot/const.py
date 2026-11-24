@@ -37,4 +37,6 @@ LOCAL_UNIQUE_ID = "local"
 LOCAL_STALE_HOURS = 36
 
 SIGNAL_LOCAL_NEW_POT = "lazypot_local_new_pot_{}"
+# A local report was taken over by a cloud entry that knows the same pot (arg: device id).
+SIGNAL_LOCAL_CLAIMED = "lazypot_local_claimed"
 SIGNAL_LOCAL_UPDATE = "lazypot_local_update_{}_{}"
