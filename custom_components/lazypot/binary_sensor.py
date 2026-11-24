@@ -7,18 +7,49 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOW_BATTERY_THRESHOLD, LOW_WATER_THRESHOLD, MANUFACTURER
+from .const import (
+    CONF_MODE,
+    DOMAIN,
+    LOW_BATTERY_THRESHOLD,
+    LOW_WATER_THRESHOLD,
+    MANUFACTURER,
+    MODE_LOCAL,
+    SIGNAL_LOCAL_NEW_POT,
+)
 from .coordinator import LazyPotCoordinator
+from .local import LocalHub
+from .local_entities import LocalPotEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
+    if entry.data.get(CONF_MODE) == MODE_LOCAL:
+        hub: LocalHub = hass.data[DOMAIN][entry.entry_id]
+
+        def _entities_for(device_id: str) -> list[BinarySensorEntity]:
+            return [LocalWaterLowBinarySensor(hub, device_id)]
+
+        @callback
+        def _async_new_pot(device_id: str) -> None:
+            async_add_entities(_entities_for(device_id))
+
+        async_add_entities(
+            [e for device_id in hub.pots for e in _entities_for(device_id)]
+        )
+        entry.async_on_unload(
+            async_dispatcher_connect(
+                hass, SIGNAL_LOCAL_NEW_POT.format(entry.entry_id), _async_new_pot
+            )
+        )
+        return
+
     coordinator: LazyPotCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[BinarySensorEntity] = []
     for connection_id in coordinator.data:
@@ -48,7 +79,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class LazyPotOnlineBinarySensor(CoordinatorEntity[LazyPotCoordinator], BinarySensorEntity):
+class LazyPotOnlineBinarySensor(
+    CoordinatorEntity[LazyPotCoordinator], BinarySensorEntity
+):
     """Reflects the API's own isOnline flag (reported within the last 24h)."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
@@ -61,7 +94,8 @@ class LazyPotOnlineBinarySensor(CoordinatorEntity[LazyPotCoordinator], BinarySen
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, connection_id)},
             manufacturer=MANUFACTURER,
-            name=coordinator.data.get(connection_id, {}).get("name") or f"LazyPot {connection_id}",
+            name=coordinator.data.get(connection_id, {}).get("name")
+            or f"LazyPot {connection_id}",
         )
 
     @property
@@ -70,7 +104,9 @@ class LazyPotOnlineBinarySensor(CoordinatorEntity[LazyPotCoordinator], BinarySen
         return bool(device.get("isOnline"))
 
 
-class LazyPotThresholdBinarySensor(CoordinatorEntity[LazyPotCoordinator], BinarySensorEntity):
+class LazyPotThresholdBinarySensor(
+    CoordinatorEntity[LazyPotCoordinator], BinarySensorEntity
+):
     def __init__(
         self,
         coordinator: LazyPotCoordinator,
@@ -92,7 +128,8 @@ class LazyPotThresholdBinarySensor(CoordinatorEntity[LazyPotCoordinator], Binary
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, connection_id)},
             manufacturer=MANUFACTURER,
-            name=coordinator.data.get(connection_id, {}).get("name") or f"LazyPot {connection_id}",
+            name=coordinator.data.get(connection_id, {}).get("name")
+            or f"LazyPot {connection_id}",
         )
 
     @property
@@ -102,3 +139,20 @@ class LazyPotThresholdBinarySensor(CoordinatorEntity[LazyPotCoordinator], Binary
         if value is None:
             return None
         return value < self._threshold
+
+
+class LocalWaterLowBinarySensor(LocalPotEntity, BinarySensorEntity):
+    """On when the pot reports its water tank as (nearly) empty."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "water_tank_empty"
+
+    def __init__(self, hub: LocalHub, device_id: str) -> None:
+        super().__init__(hub, device_id, "water_low")
+
+    @property
+    def is_on(self) -> bool | None:
+        value = self._value()
+        if value is None:
+            return None
+        return value == "ON"

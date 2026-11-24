@@ -2,11 +2,27 @@
   "config": {
     "step": {
       "user": {
+        "title": "Add LazyPot",
+        "description": "How are your LazyPots connected?",
+        "menu_options": {
+          "cloud": "Through my LazyPot account (cloud)",
+          "local": "On my home network (no account)"
+        }
+      },
+      "cloud": {
         "title": "Connect your LazyPot account",
-        "description": "Paste the integration token from your LazyPot account settings (website or app) \u2014 this is not your LazyPot login password.",
+        "description": "Paste the integration token from your LazyPot account settings (website or app) — this is not your LazyPot login password.",
         "data": {
           "api_token": "Integration token"
         }
+      },
+      "local": {
+        "title": "LazyPots on your home network",
+        "description": "Pots set up with the LazyPot integration switched on send their readings straight to Home Assistant after every check-in. Nothing goes through the internet and no account is needed. Each pot appears here by itself the first time it reports, which can take a few minutes after setup."
+      },
+      "zeroconf_confirm": {
+        "title": "New LazyPot found",
+        "description": "{name} is on your network. Add LazyPots on this network to Home Assistant? It appears with its readings at its next check-in, and any other LazyPot that reports here is added automatically."
       },
       "reauth_confirm": {
         "title": "Reconnect your LazyPot account",
@@ -22,9 +38,46 @@
       "unknown": "Unexpected error."
     },
     "abort": {
-      "already_configured": "This LazyPot account is already configured.",
+      "already_configured": "This is already set up.",
       "reauth_successful": "Your LazyPot account was reconnected.",
       "wrong_account": "This token belongs to a different LazyPot account. Use a token from the account this integration was set up with."
+    },
+    "flow_title": "{name}"
+  },
+  "entity": {
+    "sensor": {
+      "soil_moisture": {
+        "name": "Soil moisture"
+      },
+      "water_tank": {
+        "name": "Water tank"
+      },
+      "last_watered": {
+        "name": "Last watered"
+      },
+      "last_dose": {
+        "name": "Last dose"
+      },
+      "care_state": {
+        "name": "Care state"
+      },
+      "next_check_in": {
+        "name": "Next check-in"
+      },
+      "last_seen": {
+        "name": "Last report"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      }
+    },
+    "binary_sensor": {
+      "water_tank_empty": {
+        "name": "Water tank empty"
+      }
     }
   }
 }

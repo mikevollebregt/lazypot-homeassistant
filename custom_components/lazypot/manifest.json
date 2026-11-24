@@ -1,12 +1,20 @@
 {
   "domain": "lazypot",
   "name": "LazyPot",
-  "codeowners": ["@mikevollebregt"],
+  "codeowners": [
+    "@mikevollebregt"
+  ],
   "config_flow": true,
+  "dependencies": [
+    "webhook"
+  ],
   "documentation": "https://github.com/mikevollebregt/lazypot-homeassistant",
   "integration_type": "hub",
-  "iot_class": "cloud_polling",
+  "iot_class": "local_push",
   "issue_tracker": "https://github.com/mikevollebregt/lazypot-homeassistant/issues",
   "requirements": [],
-  "version": "1.0.3"
+  "version": "1.1.0",
+  "zeroconf": [
+    "_lazypot._tcp.local."
+  ]
 }

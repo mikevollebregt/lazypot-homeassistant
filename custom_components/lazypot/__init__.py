@@ -10,15 +10,37 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import LazyPotApiClient, LazyPotApiError, is_account_id
-from .const import CONF_API_TOKEN, CONF_BASE_URL, DEFAULT_API_BASE_URL, DOMAIN
+from .const import (
+    CONF_API_TOKEN,
+    CONF_BASE_URL,
+    CONF_MODE,
+    DEFAULT_API_BASE_URL,
+    DOMAIN,
+    MODE_LOCAL,
+)
 from .coordinator import LazyPotCoordinator
+from .local import LocalHub
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 
+def is_local_entry(entry: ConfigEntry) -> bool:
+    """True for the "LazyPot (local)" entry; entries without a mode are cloud."""
+    return entry.data.get(CONF_MODE) == MODE_LOCAL
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    if is_local_entry(entry):
+        hub = LocalHub(hass, entry)
+        await hub.async_load()
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        hub.async_register_webhook()
+        hub.async_start_staleness_check()
+        return True
+
     session = async_get_clientsession(hass)
     client = LazyPotApiClient(
         session,
@@ -59,6 +81,8 @@ async def _async_migrate_unique_id(
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    if is_local_entry(entry):
+        hass.data[DOMAIN][entry.entry_id].async_unregister_webhook()
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
         hass.data[DOMAIN].pop(entry.entry_id)

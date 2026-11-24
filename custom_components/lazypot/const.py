@@ -20,3 +20,21 @@ LOW_BATTERY_THRESHOLD = 20
 LOW_WATER_THRESHOLD = 15
 
 MANUFACTURER = "LazyPot"
+
+# How a config entry gets its data. Entries from before 1.1.0 have no mode and are cloud.
+CONF_MODE = "mode"
+MODE_CLOUD = "cloud"
+MODE_LOCAL = "local"
+
+# Local mode: every pot in the house POSTs to this one fixed, local-only webhook (the
+# firmware has the path compiled in: /api/webhook/lazypot_local). One local entry per HA.
+LOCAL_WEBHOOK_ID = "lazypot_local"
+LOCAL_UNIQUE_ID = "local"
+
+# A pot that has not reported for this long is shown as unavailable. Normal sleep (night plus
+# a long interval) stays well below it, so sleeping is never a fault. Same as the pot's MQTT
+# expire_after.
+LOCAL_STALE_HOURS = 36
+
+SIGNAL_LOCAL_NEW_POT = "lazypot_local_new_pot_{}"
+SIGNAL_LOCAL_UPDATE = "lazypot_local_update_{}_{}"

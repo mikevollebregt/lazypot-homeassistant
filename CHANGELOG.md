@@ -6,6 +6,18 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Local mode: "On my home network (no account)" when adding the integration. LazyPots
+  with the Home Assistant channel switched on (new firmware) send their readings straight
+  to Home Assistant after every check-in. No internet or account involved.
+- "New LazyPot found" discovery: a pot that announces itself on the network offers the
+  local setup by itself.
+- Local pots get soil moisture, water tank, water tank empty, last watered, last dose,
+  care state, battery, next check-in and last report sensors, plus battery voltage and
+  Wi-Fi signal (disabled by default). They keep their last values over a restart and
+  turn unavailable after 36 hours without a report.
+
 ## [1.0.3] - 2026-11-02
 
 ### Changed
