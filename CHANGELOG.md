@@ -17,6 +17,11 @@ project uses [Semantic Versioning](https://semver.org/).
   care state, battery, next check-in and last report sensors, plus battery voltage and
   Wi-Fi signal (disabled by default). They keep their last values over a restart and
   turn unavailable after 36 hours without a report.
+- Channel switches for local pots: LazyPot app, LazyPot integration and MQTT. A change is
+  applied at the pot's next check-in (attribute `pending` until then); the pot refuses to
+  switch off its last channel.
+- A pot set up both in the cloud and locally shows as one device (needs the smart-home API
+  that returns `deviceId`).
 
 ## [1.0.3] - 2026-11-02
 

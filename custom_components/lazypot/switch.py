@@ -1,0 +1,88 @@
+"""Channel switches for locally reporting pots: LazyPot app, LazyPot integration, MQTT.
+
+A pot sleeps, so a change cannot be applied right away. The switch shows the wanted value
+straight away (attribute ``pending: true``) and the pot applies it at its next check-in,
+from the reply to its report. The pot has the last word: it refuses to switch on the app
+when it was never linked to an account, MQTT when no broker was set up, and any change that
+would leave no channel at all. Then the switch falls back to what the pot reports.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import DOMAIN, SIGNAL_LOCAL_NEW_POT
+from .local import LocalHub
+from .local_entities import LocalPotEntity
+
+CHANNELS: tuple[tuple[str, str, str], ...] = (
+    ("cloud", "channel_app", "mdi:cellphone"),
+    ("integration", "channel_integration", "mdi:home-assistant"),
+    ("mqtt", "channel_mqtt", "mdi:access-point-network"),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    hub: LocalHub = hass.data[DOMAIN][entry.entry_id]
+
+    def _entities_for(device_id: str) -> list[LocalChannelSwitch]:
+        return [LocalChannelSwitch(hub, device_id, *channel) for channel in CHANNELS]
+
+    @callback
+    def _async_new_pot(device_id: str) -> None:
+        async_add_entities(_entities_for(device_id))
+
+    async_add_entities([e for device_id in hub.pots for e in _entities_for(device_id)])
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SIGNAL_LOCAL_NEW_POT.format(entry.entry_id), _async_new_pot
+        )
+    )
+
+
+class LocalChannelSwitch(LocalPotEntity, SwitchEntity):
+    """Switches one channel of a pot at its next check-in."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self,
+        hub: LocalHub,
+        device_id: str,
+        channel: str,
+        translation_key: str,
+        icon: str,
+    ) -> None:
+        super().__init__(hub, device_id, f"channel_{channel}")
+        self._channel = channel
+        self._attr_translation_key = translation_key
+        self._attr_icon = icon
+
+    @property
+    def _pending(self) -> bool | None:
+        return self._hub.wanted.get(self._device_id, {}).get(self._channel)
+
+    @property
+    def is_on(self) -> bool | None:
+        if self._pending is not None:
+            return self._pending
+        return self._report.get("channels", {}).get(self._channel)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {"pending": self._pending is not None}
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        self._hub.async_set_channel(self._device_id, self._channel, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        self._hub.async_set_channel(self._device_id, self._channel, False)

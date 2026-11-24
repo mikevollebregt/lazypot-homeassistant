@@ -69,6 +69,9 @@ class LocalHub:
         self.hass = hass
         self.entry = entry
         self.pots: dict[str, dict[str, Any]] = {}
+        # Channel switches changed in Home Assistant that the pot has not applied yet, per pot.
+        # Sent in the reply to its next report; cleared once the pot reports matching values.
+        self.wanted: dict[str, dict[str, bool]] = {}
         self._store: Store[dict[str, Any]] = Store(
             hass, STORAGE_VERSION, f"{DOMAIN}.local_{entry.entry_id}"
         )
@@ -77,10 +80,28 @@ class LocalHub:
         data = await self._store.async_load()
         if data and isinstance(data.get("pots"), dict):
             self.pots = data["pots"]
+        if data and isinstance(data.get("wanted"), dict):
+            self.wanted = data["wanted"]
 
     @callback
     def _data_to_save(self) -> dict[str, Any]:
-        return {"pots": self.pots}
+        return {"pots": self.pots, "wanted": self.wanted}
+
+    @callback
+    def async_set_channel(self, device_id: str, channel: str, on: bool) -> None:
+        """Remember a switch change; the pot picks it up in the reply to its next report."""
+        reported = self.pots.get(device_id, {}).get("channels", {})
+        wanted = self.wanted.setdefault(device_id, {})
+        if reported.get(channel) == on:
+            wanted.pop(channel, None)
+        else:
+            wanted[channel] = on
+        if not wanted:
+            self.wanted.pop(device_id, None)
+        self._store.async_delay_save(self._data_to_save, SAVE_DELAY_SECONDS)
+        async_dispatcher_send(
+            self.hass, SIGNAL_LOCAL_UPDATE.format(self.entry.entry_id, device_id)
+        )
 
     @callback
     def async_register_webhook(self) -> None:
@@ -153,5 +174,17 @@ class LocalHub:
             hass, SIGNAL_LOCAL_UPDATE.format(self.entry.entry_id, device_id)
         )
 
-        # The reply is the place for future settings (switch channels from Home Assistant).
+        # Switch changes made in Home Assistant go back in the reply. Whatever the pot now
+        # reports as already applied is done; the rest is sent (again).
+        wanted = self.wanted.get(device_id, {})
+        pending = {
+            ch: on for ch, on in wanted.items() if report["channels"].get(ch) is not on
+        }
+        if pending:
+            self.wanted[device_id] = pending
+        else:
+            self.wanted.pop(device_id, None)
+        self._store.async_delay_save(self._data_to_save, SAVE_DELAY_SECONDS)
+        if pending:
+            return web.json_response({"ok": True, "channels": pending})
         return web.json_response({"ok": True})

@@ -24,6 +24,11 @@ from .local import LocalHub
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+LOCAL_PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+]
 
 
 def is_local_entry(entry: ConfigEntry) -> bool:
@@ -36,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hub = LocalHub(hass, entry)
         await hub.async_load()
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(entry, LOCAL_PLATFORMS)
         hub.async_register_webhook()
         hub.async_start_staleness_check()
         return True
@@ -81,9 +86,11 @@ async def _async_migrate_unique_id(
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    platforms = PLATFORMS
     if is_local_entry(entry):
         hass.data[DOMAIN][entry.entry_id].async_unregister_webhook()
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        platforms = LOCAL_PLATFORMS
+    unloaded = await hass.config_entries.async_unload_platforms(entry, platforms)
     if unloaded:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unloaded

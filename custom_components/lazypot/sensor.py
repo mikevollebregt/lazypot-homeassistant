@@ -20,13 +20,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MODE, DOMAIN, MANUFACTURER, MODE_LOCAL, SIGNAL_LOCAL_NEW_POT
-from .coordinator import LazyPotCoordinator
+from .const import CONF_MODE, DOMAIN, MODE_LOCAL, SIGNAL_LOCAL_NEW_POT
+from .coordinator import LazyPotCoordinator, cloud_device_info
 from .local import LocalHub
 from .local_entities import LocalPotEntity
 
@@ -196,11 +195,7 @@ class LazyPotSensor(CoordinatorEntity[LazyPotCoordinator], SensorEntity):
         self.entity_description = description
         self._connection_id = connection_id
         self._attr_unique_id = f"{connection_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, connection_id)},
-            manufacturer=MANUFACTURER,
-            name=self._device_name,
-        )
+        self._attr_device_info = cloud_device_info(coordinator, connection_id)
 
     @property
     def _device_name(self) -> str:

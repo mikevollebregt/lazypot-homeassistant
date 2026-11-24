@@ -78,6 +78,17 @@
       "water_tank_empty": {
         "name": "Water tank empty"
       }
+    },
+    "switch": {
+      "channel_app": {
+        "name": "LazyPot app"
+      },
+      "channel_integration": {
+        "name": "LazyPot integration"
+      },
+      "channel_mqtt": {
+        "name": "MQTT"
+      }
     }
   }
 }

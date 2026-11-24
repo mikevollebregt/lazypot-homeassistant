@@ -9,10 +9,11 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import LazyPotApiClient, LazyPotApiError, LazyPotAuthError
-from .const import DEFAULT_SCAN_INTERVAL_MINUTES, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL_MINUTES, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 class LazyPotCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Polls GetLazyPotsByUser once per cycle; keyed by connectionId."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: LazyPotApiClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, client: LazyPotApiClient
+    ) -> None:
         super().__init__(
             hass,
             _LOGGER,
@@ -41,3 +44,23 @@ class LazyPotCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             raise UpdateFailed(str(err)) from err
 
         return {str(d["connectionId"]): d for d in devices if "connectionId" in d}
+
+
+def cloud_device_info(
+    coordinator: LazyPotCoordinator, connection_id: str
+) -> DeviceInfo:
+    """Device info for a cloud pot.
+
+    Newer API versions also return the pot's own id ("deviceId"), the same id the pot uses
+    when it reports locally. Adding it as a second identifier makes Home Assistant put the
+    cloud and local entities of one pot on a single device.
+    """
+    device = coordinator.data.get(connection_id, {})
+    identifiers = {(DOMAIN, connection_id)}
+    if device.get("deviceId"):
+        identifiers.add((DOMAIN, str(device["deviceId"])))
+    return DeviceInfo(
+        identifiers=identifiers,
+        manufacturer=MANUFACTURER,
+        name=device.get("name") or f"LazyPot {connection_id}",
+    )

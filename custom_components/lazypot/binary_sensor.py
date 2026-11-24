@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -18,11 +17,10 @@ from .const import (
     DOMAIN,
     LOW_BATTERY_THRESHOLD,
     LOW_WATER_THRESHOLD,
-    MANUFACTURER,
     MODE_LOCAL,
     SIGNAL_LOCAL_NEW_POT,
 )
-from .coordinator import LazyPotCoordinator
+from .coordinator import LazyPotCoordinator, cloud_device_info
 from .local import LocalHub
 from .local_entities import LocalPotEntity
 
@@ -91,12 +89,7 @@ class LazyPotOnlineBinarySensor(
         self._connection_id = connection_id
         self._attr_name = "Online"
         self._attr_unique_id = f"{connection_id}_online"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, connection_id)},
-            manufacturer=MANUFACTURER,
-            name=coordinator.data.get(connection_id, {}).get("name")
-            or f"LazyPot {connection_id}",
-        )
+        self._attr_device_info = cloud_device_info(coordinator, connection_id)
 
     @property
     def is_on(self) -> bool | None:
@@ -125,12 +118,7 @@ class LazyPotThresholdBinarySensor(
         self._attr_name = name
         self._attr_device_class = device_class
         self._attr_unique_id = f"{connection_id}_{key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, connection_id)},
-            manufacturer=MANUFACTURER,
-            name=coordinator.data.get(connection_id, {}).get("name")
-            or f"LazyPot {connection_id}",
-        )
+        self._attr_device_info = cloud_device_info(coordinator, connection_id)
 
     @property
     def is_on(self) -> bool | None:
